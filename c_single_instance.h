@@ -88,8 +88,31 @@ void TestMultiThreadSingletonBar(){
 }
 
 //多线程版本
+template <typename T>
 class TSingleton{
+    public:
+        template <typename... Args>
+        static T & instance(Args... args) {
+            std::call_once(m_initFlag, &TSingleton::initSingleton<Args...>, std::forward<Args>(args)...);
+            return *m_instance;
+        }
+    private:
+        TSingleton() = default;
+        ~TSingleton() = default;
+        TSingleton(const TSingleton&) = delete;
+        TSingleton & operator=(const TSingleton&) = delete;
 
+        template <typename... Args>
+        static void initSingleton(Args&&... args) {
+            m_instance.reset(new T(std::forward<Args>(args)...));
+        }
+        static std::unique_ptr<T> m_instance;
+        static std::once_flag m_initFlag;
 };
+
+template <typename T>
+std::unique_ptr<T> TSingleton<T>::m_instance = nullptr;
+tempalte <typename T>
+std::once_flag TSingleton<T>::m_initFlag;
 
 #endif
